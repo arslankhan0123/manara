@@ -39,6 +39,34 @@
                     </div>
                 </div>
 
+                {{-- ✅ Start Date Filter --}}
+                <div class="card-header-action mr-3 select2-mobile-margin">
+                    <div class="input-group">
+                        <input type="text" id="filterStartDate" class="form-control"
+                            placeholder="Start Date" autocomplete="off" readonly
+                            style="min-width: 130px;">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-secondary clear-start-date" title="Clear Start Date">
+                                <i class="fas fa-times text-muted"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ✅ End Date Filter --}}
+                <div class="card-header-action mr-3 select2-mobile-margin">
+                    <div class="input-group">
+                        <input type="text" id="filterEndDate" class="form-control"
+                            placeholder="End Date" autocomplete="off" readonly
+                            style="min-width: 130px;" disabled>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-secondary clear-end-date" title="Clear End Date">
+                                <i class="fas fa-times text-muted"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- ✅ Customer Filter with Clear Button --}}
                 <div class="card-header-action mr-3 select2-mobile-margin">
                     <div class="input-group">
@@ -106,11 +134,11 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('vendor/livewire/livewire.js') }}"></script>
-    @include('livewire.livewire-turbo')
+    @livewireScripts
 
     <script>
         $(document).ready(function() {
+
             // ✅ Month picker
             $('#filterMonth').datepicker({
                 format: "MM yyyy",
@@ -127,13 +155,13 @@
                     const date = e.date;
                     const year = date.getFullYear();
                     const month = String(date.getMonth() + 1).padStart(2, '0');
-                    Livewire.emit('filterMonth', `${year}-${month}`);
+                    window.livewire.emit('filterMonth', `${year}-${month}`);
                 }
             });
 
             $('.clear-month').on('click', function() {
                 $('#filterMonth').val('').datepicker('update');
-                Livewire.emit('filterMonth', '');
+                window.livewire.emit('filterMonth', '');
             });
 
             // ✅ Customer select2
@@ -141,15 +169,15 @@
                 width: '180px',
                 dropdownAutoWidth: true,
                 placeholder: "Select Customer",
-                allowClear: false // we are using custom clear button
+                allowClear: false
             }).on('change', function() {
-                Livewire.emit('filterCustomer', $(this).val());
+                window.livewire.emit('filterCustomer', $(this).val());
             });
 
             // ✅ Clear Customer Filter
             $('.clear-customer').on('click', function() {
                 $('#filterCustomer').val(null).trigger('change');
-                Livewire.emit('filterCustomer', '');
+                window.livewire.emit('filterCustomer', '');
             });
 
             // ✅ Branch Filter
@@ -159,7 +187,7 @@
                 placeholder: "Select Branch",
                 allowClear: true
             }).on('change', function() {
-                Livewire.emit('filterBranch', $(this).val());
+                window.livewire.emit('filterBranch', $(this).val());
             });
 
             // ✅ Payment Status Filter
@@ -169,7 +197,84 @@
                 placeholder: "Select Status",
                 allowClear: true
             }).on('change', function() {
-                Livewire.emit('filterStatus', $(this).val());
+                window.livewire.emit('filterStatus', $(this).val());
+            });
+
+            // ✅ Start Date Filter
+            $('#filterStartDate').datepicker({
+                format: "yyyy-mm-dd",
+                autoclose: true,
+                todayHighlight: true,
+                templates: {
+                    leftArrow: '<i class="fas fa-chevron-left"></i>',
+                    rightArrow: '<i class="fas fa-chevron-right"></i>'
+                }
+            }).on('changeDate', function(e) {
+                if (e.date) {
+                    const startDate = $(this).val();
+                    // Enable end date and set its start date constraint
+                    $('#filterEndDate').prop('disabled', false);
+                    $('#filterEndDate').datepicker('setStartDate', e.date);
+                    // If end date is already set and is before new start date, clear it
+                    const endDateVal = $('#filterEndDate').val();
+                    if (endDateVal && endDateVal < startDate) {
+                        $('#filterEndDate').val('').datepicker('update');
+                    }
+                    // Emit only if both dates are set
+                    const endDate = $('#filterEndDate').val();
+                    if (endDate) {
+                        // Clear month filter when date range is active
+                        $('#filterMonth').val('').datepicker('update');
+                        window.livewire.emit('filterMonth', '');
+                        window.livewire.emit('filterDateRange', startDate, endDate);
+                        console.log('[Invoice Filter] filterDateRange emitted:', startDate, endDate);
+                    }
+                }
+            });
+
+            // ✅ Clear Start Date
+            $('.clear-start-date').on('click', function() {
+                $('#filterStartDate').val('').datepicker('update');
+                $('#filterEndDate').val('').datepicker('update').prop('disabled', true);
+                $('#filterEndDate').datepicker('setStartDate', false);
+                window.livewire.emit('filterDateRange', '', '');
+            });
+
+            // ✅ End Date Filter
+            $('#filterEndDate').datepicker({
+                format: "yyyy-mm-dd",
+                autoclose: true,
+                todayHighlight: true,
+                templates: {
+                    leftArrow: '<i class="fas fa-chevron-left"></i>',
+                    rightArrow: '<i class="fas fa-chevron-right"></i>'
+                }
+            }).on('changeDate', function(e) {
+                if (e.date) {
+                    const startDate = $('#filterStartDate').val();
+                    const endDate = $(this).val();
+                    if (!startDate) {
+                        alert('Please select a Start Date first.');
+                        $(this).val('').datepicker('update');
+                        return;
+                    }
+                    // Clear month filter when date range is active
+                    $('#filterMonth').val('').datepicker('update');
+                    window.livewire.emit('filterMonth', '');
+                    window.livewire.emit('filterDateRange', startDate, endDate);
+                    console.log('[Invoice Filter] filterDateRange emitted:', startDate, endDate);
+                }
+            });
+
+            // ✅ Clear End Date
+            $('.clear-end-date').on('click', function() {
+                $('#filterEndDate').val('').datepicker('update');
+                const startDate = $('#filterStartDate').val();
+                if (startDate) {
+                    window.livewire.emit('filterDateRange', startDate, '');
+                } else {
+                    window.livewire.emit('filterDateRange', '', '');
+                }
             });
         });
     </script>

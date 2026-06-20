@@ -16,6 +16,8 @@ class Invoices extends SearchableComponent
     public $customer = '';
     public $branchFilterID = '';
     public $monthFilter = '';
+    public $startDateFilter = '';
+    public $endDateFilter = '';
     public $paginate = 100;
 
     /**
@@ -26,7 +28,8 @@ class Invoices extends SearchableComponent
         'filterStatus',
         'filterBranch',
         'filterMonth',
-        'filterCustomer'
+        'filterCustomer',
+        'filterDateRange'
     ];
 
     /**
@@ -72,12 +75,20 @@ class Invoices extends SearchableComponent
 
     public function searchInvoices()
     {
+        \Log::info('=== START SEARCH INVOICES ===', [
+            'monthFilter' => $this->monthFilter,
+            'statusFilter' => $this->statusFilter,
+            'customer' => $this->customer,
+            'branchFilterID' => $this->branchFilterID,
+            'search' => $this->search,
+            'startDateFilter' => $this->startDateFilter,
+            'endDateFilter' => $this->endDateFilter,
+        ]);
+
         // Add 'project' to the with() clause to eager load the relationship
         $this->setQuery($this->getQuery()->with(['customer', 'project']));
 
-        $this->getQuery()->where(function (Builder $query) {
-            $this->filterResults();
-        });
+        $this->filterResults();
 
         $this->getQuery()->when($this->statusFilter !== '', function (Builder $q) {
             $q->where('payment_status', $this->statusFilter);
@@ -109,13 +120,23 @@ class Invoices extends SearchableComponent
             });
         });
 
+        // Apply date range filter on invoice_date
+        if (!empty($this->startDateFilter)) {
+            $this->getQuery()->whereDate('invoice_date', '>=', $this->startDateFilter);
+        }
+        if (!empty($this->endDateFilter)) {
+            $this->getQuery()->whereDate('invoice_date', '<=', $this->endDateFilter);
+        }
+
         // Group draft invoices at the top, sort by invoice number descending
         $this->getQuery()->reorder()
             ->orderByRaw("CASE WHEN payment_status = 0 THEN 0 ELSE 1 END ASC")
             ->orderByRaw("LENGTH(invoice_number) DESC")
             ->orderByRaw("invoice_number DESC");
 
-        return $this->paginate();
+        \Log::info('SQL:', ['sql' => $this->getQuery()->toSql(), 'bindings' => $this->getQuery()->getBindings()]);
+
+        return $this->paginate(false);
     }
     // public function searchInvoices()
     // {
@@ -223,6 +244,17 @@ class Invoices extends SearchableComponent
 
     public function updatingSearch()
     {
+        $this->resetPage();
+    }
+
+    /**
+     * @param  string  $startDate
+     * @param  string  $endDate
+     */
+    public function filterDateRange($startDate, $endDate)
+    {
+        $this->startDateFilter = $startDate;
+        $this->endDateFilter = $endDate;
         $this->resetPage();
     }
 }
