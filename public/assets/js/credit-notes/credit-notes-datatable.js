@@ -1,0 +1,56 @@
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+var __webpack_exports__ = {};
+/*!********************************************************************!*\
+  !*** ./resources/assets/js/credit-notes/credit-notes-datatable.js ***!
+  \********************************************************************/
+
+
+$(document).ready(function () {
+  $('#filterStatus').select2({
+    width: '150px'
+  });
+});
+$(document).on('mouseenter', '.credit-note-card', function () {
+  $(this).find('.credit-note-action').removeClass('d-none');
+});
+$(document).on('mouseleave', '.credit-note-card', function () {
+  $(this).find('.credit-note-action').addClass('d-none');
+  $(this).parent().trigger('click');
+});
+$(document).on('change', '#filterStatus', function () {
+  window.livewire.emit('statusFilter', $(this).val());
+});
+$(document).on('click', '.delete-btn', function (event) {
+  var creditNoteId = $(this).attr('data-id');
+  deleteItemLiveWire(route('credit-notes.destroy', creditNoteId), Lang.get('messages.contact.credit_note'));
+});
+
+if (customerId === null) {
+  document.addEventListener('livewire:load', function (event) {
+    Livewire.hook('message.processed', function (message, component) {
+      var $owl = $('.owl-carousel');
+      $owl.trigger('destroy.owl.carousel');
+      $owl.html($owl.find('.owl-stage-outer').html()).removeClass('owl-loaded');
+      livewireLoadOwel($owl);
+    });
+  });
+}
+
+$(document).ready(function () {
+  $('#creditNoteStatus').select2();
+});
+$(document).on('change', '#creditNoteStatus', function () {
+  window.livewire.emit('statusFilter', $(this).val());
+});
+document.addEventListener('DOMContentLoaded', function (event) {
+  Livewire.hook('message.received', function (message, component) {
+    setTimeout(function () {
+      $(document).find('#creditNoteStatus').select2('destroy');
+      $(document).find('#creditNoteStatus').select2();
+      $(document).find('.select2').removeClass('opacity-0');
+    }, 200);
+  });
+});
+/******/ })()
+;

@@ -1,0 +1,30 @@
+@media (max-width: 615px) {
+  .section .expense-mbl-sec-hdr {
+    flex-wrap: wrap !important;
+    margin-bottom: 20px !important;
+  }
+}
+
+@media (max-width: 615px) {
+  .section .section-header .section-header-breadcrumb {
+    flex-basis: 100% !important;
+    margin-top: 10px !important;
+  }
+}
+
+@media (max-width: 615px) {
+  .section .section-header .float-right {
+    display: inline-block !important;
+    width: 100% !important;
+    margin-top: 15px !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .section .section-header .float-right {
+    display: flex !important;
+    justify-content: flex-end !important;
+  }
+}
+
+

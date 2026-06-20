@@ -1,0 +1,167 @@
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+var __webpack_exports__ = {};
+/*!*********************************************!*\
+  !*** ./resources/assets/js/projects/new.js ***!
+  \*********************************************/
+
+
+$(document).ready(function () {
+  if ($('#calculateProgressThroughTasks').prop('checked') == true) {
+    $('#projectProgress').attr('disabled', true);
+    $('#percentageId').hide();
+  } else {
+    $('#projectProgress').removeAttr('disabled');
+    $('#percentageId').show();
+  }
+
+  $(document).on('submit', '#createProject, #editProject', function () {
+    var loadingButton = jQuery(this).find('#btnSave');
+    loadingButton.button('loading');
+    $('#btnSave').attr('disabled', true);
+
+    if ($('#error-msg').text() !== '') {
+      return false;
+    }
+
+    var description = $('<div />').html($('#projectDescription').summernote('code'));
+    var empty = description.text().trim().replace(/ \r\n\t/g, '') === '';
+
+    if ($('#projectDescription').summernote('isEmpty')) {
+      $('#projectDescription').val('');
+    } else if (empty) {
+      displayErrorMessage('Description field is not contain only white space');
+
+      var _loadingButton = jQuery(this).find('#btnSave');
+
+      _loadingButton.button('reset');
+
+      return false;
+    }
+  });
+  $(document).on('change', '#calculateProgressThroughTasks', function () {
+    if ($(this).prop('checked') == true) {
+      $('#projectProgress').attr('disabled', true);
+      $('#percentageId').hide();
+    } else {
+      $('#projectProgress').removeAttr('disabled');
+      $('#percentageId').show();
+    }
+  });
+  $('#startDate').datetimepicker({
+    format: 'YYYY-MM-DD',
+    useCurrent: false,
+    sideBySide: true,
+    widgetPositioning: {
+      horizontal: 'left',
+      vertical: 'bottom'
+    },
+    maxDate: new Date(),
+    icons: {
+      up: 'fa fa-chevron-up',
+      down: 'fa fa-chevron-down',
+      next: 'fa fa-chevron-right',
+      previous: 'fa fa-chevron-left'
+    }
+  });
+  $('#deadline').datetimepicker({
+    format: 'YYYY-MM-DD',
+    useCurrent: false,
+    sideBySide: true,
+    widgetPositioning: {
+      horizontal: 'left',
+      vertical: 'bottom'
+    },
+    icons: {
+      up: 'fa fa-chevron-up',
+      down: 'fa fa-chevron-down',
+      next: 'fa fa-chevron-right',
+      previous: 'fa fa-chevron-left'
+    }
+  });
+  $('#startDate, #deadline').on('dp.show', function () {
+    matchWindowScreenPixels({
+      startDate: '#startDate',
+      deadline: '#deadline'
+    }, 'pro');
+  });
+  setTimeout(function () {
+    if (editData == true) $('#deadline').data('DateTimePicker').minDate($('#deadline').val());else $('#deadline').data('DateTimePicker').minDate(moment().add(1, 'day'));
+  }, 1000);
+  $('#customersSelectBox').select2({
+    placeholder: Lang.get('messages.placeholder.select_customer'),
+    width: '100%'
+  });
+  $('#contactsSelectBox').select2({
+    placeholder: Lang.get('messages.contacts'),
+    width: '100%'
+  });
+  $('#membersSelectBox').select2({
+    placeholder: Lang.get('messages.placeholder.select_member'),
+    width: '100%'
+  });
+  $('#tablesSelectBox').select2({
+    placeholder: 'Select tables',
+    width: '100%'
+  });
+  $('#billingTypeSelectBox').select2({
+    width: '100%',
+    placeholder: Lang.get('messages.placeholder.select_billing_type')
+  });
+  $('#statusSelectBox').select2({
+    width: '100%',
+    placeholder: Lang.get('messages.placeholder.select_status')
+  });
+  $('#tagId').select2({
+    placeholder: Lang.get('messages.tags'),
+    width: 'calc(100% - 44px)',
+    multiple: true
+  });
+  $(document).on('change', '#projectProgress', function () {
+    $('.projectProgressPercentage').text($(this).val() + '%');
+  });
+  setTimeout(function () {
+    if (editData === false) {
+      if ($('#customersSelectBox').val() != '') {
+        $('#customersSelectBox').val($('#customersSelectBox').val()).trigger('change');
+      }
+    }
+  }, 500);
+  setTimeout(function () {
+    if (editData == true) {
+      if ($('#customersSelectBox').val() !== '') {
+        $('#customersSelectBox').val($('#customersSelectBox').val()).trigger('change');
+      }
+    }
+  }, 500);
+  $(document).on('change', '#customersSelectBox', function () {
+    var customerId = $(this).val();
+    $.ajax({
+      url: route('projects.memberAsPerCustomer'),
+      data: {
+        'customer_id': customerId
+      },
+      type: 'post',
+      dataType: 'json',
+      success: function success(result) {
+        if (result.success) {
+          var members = result.data;
+          var options = [];
+          $.each(members, function (key, value) {
+            options += '<option value="' + key + '">' + value + '</option>';
+          });
+          $('#contactsSelectBox').html(options);
+
+          if (editData == true && !isEmpty(editContactIds)) {
+            $('#contactsSelectBox').val(editContactIds).trigger('change');
+          }
+        }
+      },
+      error: function error(result) {
+        displayErrorMessage(result.responseJSON.message);
+      }
+    });
+  });
+});
+/******/ })()
+;

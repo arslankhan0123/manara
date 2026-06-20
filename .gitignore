@@ -1,0 +1,15 @@
+/vendor
+/node_modules
+
+.env
+
+/storage/logs/*
+/storage/framework/*
+
+
+
+/public/hot
+
+*.log
+*.zip
+public/uploads.zip

@@ -1,0 +1,99 @@
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+var __webpack_exports__ = {};
+/*!**************************************************!*\
+  !*** ./resources/assets/js/articles/articles.js ***!
+  \**************************************************/
+
+
+var articleUrl = route('articles.index');
+$(document).ready(function () {
+  $('#filter_group').select2({
+    width: '200px'
+  });
+  $('#filterInternalArticle').select2({
+    width: '185px'
+  });
+  $('#filterDisabledArticle').select2({
+    width: '140px'
+  });
+  $('#filterArticleGroup').select2();
+});
+$(document).on('mouseenter', '.livewire-card', function () {
+  $(this).find('.action-dropdown').removeClass('d-none');
+});
+$(document).on('mouseleave', '.livewire-card', function () {
+  $(this).find('.action-dropdown').addClass('d-none');
+  $(this).parent().trigger('click');
+});
+$(document).on('click', '.delete-btn', function (event) {
+  var articleId = $(event.currentTarget).data('id');
+  deleteItemLivewire('deleteArticle', articleId, Lang.get('messages.common.article'));
+});
+window.addEventListener('deleted', function (data) {
+  livewireDeleteEventListener(data, 'Article');
+});
+$(document).on('change', '#filterInternalArticle', function () {
+  window.livewire.emit('filterInternalArticle', $(this).val());
+});
+$(document).on('change', '#filterDisabledArticle', function () {
+  window.livewire.emit('filterDisabledArticle', $(this).val());
+});
+$(document).on('change', '#filterArticleGroup', function () {
+  window.livewire.emit('filterArticleGroup', $(this).val());
+}); // change event for internal article value
+
+$(document).on('change', '.internalArticle', function (event) {
+  var articleId = $(event.currentTarget).data('id');
+  updateInternalArticle(articleId);
+}); // change event for disabled article value
+
+$(document).on('change', '.articleDisabled', function (event) {
+  var articleId = $(event.currentTarget).attr('data-id');
+  updateDisabledArticle(articleId);
+});
+
+window.updateInternalArticle = function (id) {
+  $.ajax({
+    url: route('active.deactive.article', id),
+    method: 'post',
+    cache: false,
+    beforeSend: function beforeSend() {
+      startLoader();
+    },
+    success: function success(result) {
+      if (result.success) {
+        tbl.ajax.reload(null, false);
+      }
+    },
+    complete: function complete() {
+      stopLoader();
+    }
+  });
+};
+
+window.updateDisabledArticle = function (id) {
+  $.ajax({
+    url: route('active.deactive.disabled', id),
+    method: 'post',
+    cache: false,
+    beforeSend: function beforeSend() {
+      startLoader();
+    },
+    success: function success(result) {
+      if (result.success) {
+        window.livewire.emit('refresh');
+        displaySuccessMessage(result.message);
+      }
+    },
+    error: function error(result) {
+      manageAjaxErrors(result);
+      window.livewire.emit('refresh');
+    },
+    complete: function complete() {
+      stopLoader();
+    }
+  });
+};
+/******/ })()
+;

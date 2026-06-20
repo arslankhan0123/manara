@@ -1,0 +1,214 @@
+.activity-div .activity:before {
+  background-color: #6777ef !important;
+}
+
+.activity-div .activity .activity-detail {
+  width: 84% !important;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.014);
+  border: 1px solid #6777ef !important;
+  border-radius: 10px !important;
+  background-color: #fff !important;
+}
+
+.activity-div .activity .activity-detail:before {
+  content: none;
+}
+
+.activities .activity .activity-detail:before {
+  font-size: 15px !important;
+}
+
+.activity-icon {
+  border: 1px solid #6777ef !important;
+}
+
+.activity-icon .activity-icon-size {
+  font-size: 15px !important;
+}
+
+.activity-icon .fa-people-arrows {
+  color: #fff;
+}
+
+.activity-icon .fa-street-view {
+  color: #fff;
+}
+
+.activity-icon .fa-user {
+  color: #fff;
+}
+
+.activity-icon .fa-edit {
+  color: #fff;
+}
+
+.activity-icon .fa-autoprefixer {
+  color: #fff;
+}
+
+.activity-icon .fa-tags {
+  color: #fff;
+}
+
+.activity-icon .fa-blender-phone {
+  color: #fff;
+}
+
+.activity-icon .fa-blender-phone {
+  color: #fff;
+}
+
+.activity-icon .fa-blender-phone {
+  color: #fff;
+}
+
+.activity-icon .fa-globe {
+  color: #fff;
+}
+
+.activity-icon .fa-tty {
+  color: #fff;
+}
+
+.activity-icon .fa-layer-group {
+  color: #fff;
+}
+
+.activity-icon .fa-tasks {
+  color: #fff;
+}
+
+.activity-icon .fa-sticky-note {
+  color: #fff;
+}
+
+.activity-icon .fa-info-circle {
+  color: #fff;
+}
+
+.activity-icon .fa-reply {
+  color: #fff;
+}
+
+.activity-icon .fa-ticket-alt {
+  color: #fff;
+}
+
+.activity-icon .fa-file-invoice {
+  color: #fff;
+}
+
+.activity-icon .fa-clipboard {
+  color: #fff;
+}
+
+.activity-icon .fa-scroll {
+  color: #fff;
+}
+
+.activity-icon .fa-calculator {
+  color: #fff;
+}
+
+.activity-icon .fa-money-check-alt {
+  color: #fff;
+}
+
+.activity-icon .fa-columns {
+  color: #fff;
+}
+
+.activity-icon .fa-list-ol {
+  color: #fff;
+}
+
+.activity-icon .fa-erlang {
+  color: #fff;
+}
+
+.activity-icon .fa-product-hunt {
+  color: #fff;
+}
+
+.activity-icon .fa-percent {
+  color: #fff;
+}
+
+.activity-icon .fa-bullhorn {
+  color: #fff;
+}
+
+.activity-icon .fa-sitemap {
+  color: #fff;
+}
+
+.activity-icon .fa-object-group {
+  color: #fff;
+}
+
+.activity-icon .fa-file-contract {
+  color: #fff;
+}
+
+.activity-icon .fa-file-signature {
+  color: #fff;
+}
+
+.activity-icon .fa-bullseye {
+  color: #fff;
+}
+
+.activity-icon .fa-stripe-s {
+  color: #fff;
+}
+
+.activity-icon .fa-bell {
+  color: #fff;
+}
+
+.activity-icon .fa-sticky-note {
+  color: #fff;
+}
+
+.activity-icon .fa-comment {
+  color: #fff;
+}
+
+.activity-icon .fa-user {
+  color: #fff;
+}
+
+.divide-div {
+  border-left: 1px solid #2a6df8;
+  height: 670px;
+  position: absolute;
+  left: 50%;
+  margin-left: -3px;
+  top: 0;
+}
+
+.no-found-more-logs {
+  text-align: center;
+  font-size: 20px;
+}
+
+.load-more-logs i {
+  font-size: 30px;
+}
+
+.date_range_for_created_at_date {
+  background: #fff;
+  cursor: pointer;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  width: 100%;
+  border-radius: 5px;
+}
+
+@media screen and (max-width: 320px) {
+  .date_range_for_created_at_date {
+    padding: 6px 7px;
+  }
+}
+
+

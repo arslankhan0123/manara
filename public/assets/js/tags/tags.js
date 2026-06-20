@@ -1,0 +1,155 @@
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+var __webpack_exports__ = {};
+/*!******************************************!*\
+  !*** ./resources/assets/js/tags/tags.js ***!
+  \******************************************/
+
+
+$(document).on('click', '.addTagModal', function () {
+  $('#addModal').appendTo('body').modal('show');
+});
+$(document).on('submit', '#addNewForm', function (e) {
+  e.preventDefault();
+  processingBtn('#addNewForm', '#btnSave', 'loading');
+  var description = $('<div />').html($('#createDescription').summernote('code'));
+  var empty = description.text().trim().replace(/ \r\n\t/g, '') === '';
+
+  if ($('#createDescription').summernote('isEmpty')) {
+    $('#createDescription').val('');
+  } else if (empty) {
+    displayErrorMessage('Description field is not contain only white space');
+    processingBtn('#addNewForm', '#btnSave', 'reset');
+    return false;
+  }
+
+  $.ajax({
+    url: route('tags.store'),
+    type: 'POST',
+    data: $(this).serialize(),
+    success: function success(result) {
+      if (result.success) {
+        displaySuccessMessage(result.message);
+        $('#addModal').modal('hide');
+        window.livewire.emit('refresh');
+      }
+    },
+    error: function error(result) {
+      displayErrorMessage(result.responseJSON.message);
+    },
+    complete: function complete() {
+      processingBtn('#addNewForm', '#btnSave');
+    }
+  });
+});
+$(document).on('click', '.edit-btn', function (event) {
+  var tagId = $(event.currentTarget).data('id');
+  renderData(tagId);
+});
+
+window.renderData = function (id) {
+  $.ajax({
+    url: route('tags.edit', id),
+    type: 'GET',
+    success: function success(result) {
+      if (result.success) {
+        $('#tagId').val(result.data.id);
+        var element = document.createElement('textarea');
+        element.innerHTML = result.data.name;
+        $('#editName').val(element.value);
+        $('#editDescription').summernote('code', result.data.description);
+        $('#editModal').appendTo('body').modal('show');
+      }
+    },
+    error: function error(result) {
+      displayErrorMessage(result.responseJSON.message);
+    }
+  });
+};
+
+$(document).on('submit', '#editForm', function (event) {
+  event.preventDefault();
+  processingBtn('#editForm', '#btnEditSave', 'loading');
+  var id = $('#tagId').val();
+  var editDescription = $('<div />').html($('#editDescription').summernote('code'));
+  var empty = editDescription.text().trim().replace(/ \r\n\t/g, '') === '';
+
+  if ($('#editDescription').summernote('isEmpty')) {
+    $('#editDescription').val('');
+  } else if (empty) {
+    displayErrorMessage('Description field is not contain only white space');
+    processingBtn('#editForm', '#btnEditSave', 'reset');
+    return false;
+  }
+
+  $.ajax({
+    url: route('tags.update', id),
+    type: 'put',
+    data: $(this).serialize(),
+    success: function success(result) {
+      if (result.success) {
+        displaySuccessMessage(result.message);
+        $('#editModal').modal('hide');
+        window.livewire.emit('refresh');
+      }
+    },
+    error: function error(result) {
+      displayErrorMessage(result.responseJSON.message);
+    },
+    complete: function complete() {
+      processingBtn('#editForm', '#btnEditSave');
+    }
+  });
+}); // Show tag details on modal
+
+$(document).on('click', '.show-btn', function (e) {
+  var tagId = $(e.currentTarget).attr('data-id');
+  $.ajax({
+    url: route('tags.show', tagId),
+    type: 'GET',
+    beforeSend: function beforeSend() {
+      startLoader();
+    },
+    complete: function complete() {
+      stopLoader();
+    },
+    success: function success(result) {
+      if (result.success) {
+        $('#showName').html('');
+        $('#showDescription').html('');
+        var elements = document.createElement('textarea');
+        elements.innerHTML = result.data.name;
+        $('#showName').append(elements.value);
+        var element = document.createElement('textarea');
+        element.innerHTML = result.data.description;
+        var description = element.value;
+        $('#showDescription').append(description ? description : 'N/A');
+        $('#showModal').appendTo('body').modal('show');
+      }
+    },
+    error: function error(result) {
+      displayErrorMessage(result.responseJSON.message);
+    }
+  });
+});
+$(document).on('click', '.delete-btn', function (event) {
+  var tagId = $(this).attr('data-id');
+  deleteItemLiveWire(route('tags.destroy', tagId), Lang.get('messages.common.tag'));
+});
+$('#addModal').on('show.bs.modal', function () {
+  $('.note-toolbar-wrapper').removeAttr('style');
+  $('.note-toolbar').removeAttr('style');
+});
+$('#editModal').on('show.bs.modal', function () {
+  $('.note-toolbar-wrapper').removeAttr('style');
+  $('.note-toolbar').removeAttr('style');
+});
+$('#addModal').on('hidden.bs.modal', function () {
+  resetModalForm('#addNewForm', '#validationErrorsBox');
+  $('#createDescription').summernote('code', '');
+});
+$('#editModal').on('hidden.bs.modal', function () {
+  resetModalForm('#editForm', '#editValidationErrorsBox');
+});
+/******/ })()
+;
