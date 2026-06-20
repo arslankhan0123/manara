@@ -57,7 +57,21 @@
             </div>
         @endif
 
+        @php
+            $hasDraft = $invoices->contains('payment_status', \App\Models\Invoice::STATUS_DRAFT);
+            $dividerRendered = false;
+        @endphp
+
         @forelse($invoices as $invoice)
+            @if($invoice->payment_status != \App\Models\Invoice::STATUS_DRAFT && $hasDraft && !$dividerRendered)
+                <div class="col-12 my-3">
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted font-weight-bold mr-3" style="font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Invoices</span>
+                        <div class="flex-grow-1" style="height: 2px; background: linear-gradient(to right, #e3e6f0, transparent);"></div>
+                    </div>
+                </div>
+                @php $dividerRendered = true; @endphp
+            @endif
             <div class="col-12 col-md-6 col-xl-3 col-xlg-4 mb-4">
                 <div
                     class="card card-{{ \App\Models\Invoice::STATUS_COLOR[$invoice->payment_status] }} shadow rounded h-100">
@@ -226,7 +240,9 @@
                         </span>
                     </div>
                     <div class="col-lg-10 col-md-6 col-sm-12 d-flex justify-content-end">
-                        {{ $invoices->links() }}
+                        @if ($invoices->hasPages())
+                            {{ $invoices->links() }}
+                        @endif
                     </div>
                 </div>
             </div>

@@ -16,6 +16,7 @@ class Invoices extends SearchableComponent
     public $customer = '';
     public $branchFilterID = '';
     public $monthFilter = '';
+    public $paginate = 100;
 
     /**
      * @var string[]
@@ -107,6 +108,12 @@ class Invoices extends SearchableComponent
                     ->where('user_id', auth()->id());
             });
         });
+
+        // Group draft invoices at the top, sort by invoice number descending
+        $this->getQuery()->reorder()
+            ->orderByRaw("CASE WHEN payment_status = 0 THEN 0 ELSE 1 END ASC")
+            ->orderByRaw("LENGTH(invoice_number) DESC")
+            ->orderByRaw("invoice_number DESC");
 
         return $this->paginate();
     }

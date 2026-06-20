@@ -298,6 +298,8 @@ class InvoiceController extends AppBaseController
             $invoice = $this->invoiceRepository->updateInvoice($input, $invoice->id);
 
             if ($convert_to_invoice) {
+                DB::table('invoices')->where('id', $invoice->id)->update(['created_at' => now()]);
+                $invoice->created_at = now();
                 DocumentNextNumber::updateNumber('invoice');
             }
 
