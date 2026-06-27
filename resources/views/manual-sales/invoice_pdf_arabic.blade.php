@@ -1,590 +1,342 @@
 @php
+    $com_name = $settings['company'] ?? '';
+    $trn_number = $settings['vat_number'] ?? '';
 
-    $contentTitle = 'Tax';
-    $footer = 'Footer Content';
+    // Load logo in base64 format for mPDF stability
+    $logo_path = public_path('img/company/manara_logo.jpeg');
+    $logo_base64 = '';
 
-    $format = $settings['print_format'] ?? 1;
+    if (file_exists($logo_path)) {
+        $extension = pathinfo($logo_path, PATHINFO_EXTENSION);
 
-    if ($settings['print_format'] == 1) {
-        //smit
+        $mimeType = match (strtolower($extension)) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png'         => 'image/png',
+            'gif'         => 'image/gif',
+            default       => 'image/jpeg',
+        };
 
-        $com_name = 'شركة سهم المنار للتجارة والمقاولات';
-        $trn_number = 311204277500003;
+        $logo_base64 = 'data:' . $mimeType . ';base64,' . base64_encode(file_get_contents($logo_path));
     } else {
-        //ran
-
-        $com_name = 'مختبر راية  النجاح لمواد البناء';
-        $trn_number = 310429743800003;
+        $logo_base64 = $settings['logo'] ?? '';
     }
-    $bgColor = '#e3f2fd';  /* Very light, airy blue for header background */
-    $bColor = '#bbdefb';   /* Subtle border color, provides gentle separation */
 
+    // Clean and format phone number
+    $phone_val   = $settings['phone'] ?? '';
+    $clean_phone = preg_replace('/[^0-9]/', '', $phone_val);
+    if (strpos($clean_phone, '966') === 0) {
+        $clean_phone = '0' . substr($clean_phone, 3);
+    }
+    if (strlen($clean_phone) == 9 && strpos($clean_phone, '11') === 0) {
+        $clean_phone = '0' . $clean_phone;
+    }
+    if (empty($clean_phone)) {
+        $clean_phone = '0112368577';
+    }
+
+    // Format address
+    $address_en = $settings['address'] ?? '';
+    $address_ar = '';
+    if (strpos(strtolower($address_en), 'jeerer') !== false || strpos(strtolower($address_en), 'jareer') !== false) {
+        $address_ar = 'حي جرير - شارع أم القوين رقم المبنى 8528 رقم الوحده 3';
+    } else {
+        $address_ar = $address_en;
+    }
+
+    // Format dates
+    $invoiceDateStrEn = \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d');
+    $invoiceDateStrAr = \Carbon\Carbon::parse($invoice->invoice_date)->format('d-m-Y');
+    if ($invoice->created_at) {
+        $timeStr           = \Carbon\Carbon::parse($invoice->created_at)->format('H:i:s');
+        $invoiceDateStrEn .= ' ' . $timeStr;
+        $invoiceDateStrAr .= ' ' . $timeStr;
+    }
+
+    // Format Customer Address
+    $customerAddressText = '';
+    if ($invoice->customer && $invoice->customer->customerAddress) {
+        $parts = [];
+        if (!empty($invoice->customer->customerAddress->street)) {
+            $parts[] = $invoice->customer->customerAddress->street;
+        }
+        if (!empty($invoice->customer->customerAddress->city)) {
+            $parts[] = $invoice->customer->customerAddress->city;
+        }
+        if (!empty($invoice->customer->customerAddress->customerState?->name)) {
+            $parts[] = $invoice->customer->customerAddress->customerState->name;
+        }
+        if (!empty($invoice->customer->customerAddress->zip)) {
+            $parts[] = $invoice->customer->customerAddress->zip;
+        }
+        if (!empty($invoice->customer->customerAddress->addressCountry?->name)) {
+            $parts[] = $invoice->customer->customerAddress->addressCountry->name;
+        }
+        if (!empty($invoice->customer->address)) {
+            $parts[] = $invoice->customer->address;
+        }
+        $customerAddressText = implode(', ', $parts);
+    } else if ($invoice->customer) {
+        $customerAddressText = $invoice->customer->address ?? '';
+    }
+
+    $hasArabic  = preg_match('/\p{Arabic}/u', $customerAddressText);
+    $engAddress = $hasArabic ? '-' : ($customerAddressText ?: '-');
+    $arAddress  = $hasArabic ? ($customerAddressText ?: '-') : '-';
+
+    // Resolve project fields — ManualSale has both a project() relation and direct columns
+    $projectName     = $invoice->project->project_name     ?? $invoice->project_name     ?? 'N/A';
+    $projectLocation = $invoice->project->project_location ?? 'N/A';
+    $poNumber        = $invoice->project->po_number        ?? $invoice->po_number        ?? 'N/A';
+    $vendorCode      = $invoice->vendor_code               ?? 'N/A';
 @endphp
 
 <body>
-
     <head>
         <style>
-            .content_info {
-                padding-left: 5px;
-                padding-right: 5px;
-                padding-bottom: 10px;
+            body {
+                font-family: 'DejaVu Sans', sans-serif;
+                color: #000;
+                margin: 0;
+                padding: 0;
+                font-size: 9.5pt;
+                line-height: 1.4;
             }
-
-            .content_info table {
-                border: 1px solid {{ $bColor }};
-                /* Set border color */
-                border-collapse: collapse;
-
-
-            }
-
-            .content_info table th,
-            .content_info table td {
-                border: 1px solid {{ $bColor }};
-                /* Set border color for cells */
-                padding: 5px;
-                /* Adjust padding for cells */
-                border: 1px solid {{ $bColor }};
-            }
-
-            .content_info table td:nth-child(odd) {
-                background: {{ $bgColor }};
-                /* Background color for odd rows' first cell */
-            }
-
-            .content_items {
-                font-size: 8pt;
+            .header-table {
                 width: 100%;
-                padding-left: 5px;
-                padding-right: 5px;
-
-                /* Ensures the container takes full width */
-            }
-
-            .sales_table_data {
-                width: 100%;
-                /* Makes the table take full width */
                 border-collapse: collapse;
-
-                border: 1px solid {{ $bColor }};
-                /* Ensures borders collapse for cleaner layout */
+                margin-bottom: 5px;
             }
-
-            .sales_table_data th {
-                background: {{ $bgColor }};
-                /* Set the background color for table headers */
-                padding: 8px;
-                /* Add padding to table header cells */
+            .header-table td {
+                vertical-align: top;
+            }
+            .company-info-en {
+                width: 38%;
+                text-align: left;
+                font-size: 8.5pt;
+                line-height: 1.3;
+            }
+            .company-logo-td {
+                width: 24%;
                 text-align: center;
-                border: 1px solid {{ $bColor }};
             }
-
-            .sales_table_data td {
-                padding: 8px;
-                border: 1px solid {{ $bColor }};
-                /* Add padding to table data cells */
+            .company-logo {
+                max-height: 75px;
+                max-width: 100%;
             }
-
-             .bColor {
-                border: .05cm solid {{ $bColor }} !important;
+            .company-info-ar {
+                width: 38%;
+                text-align: right;
+                font-size: 8.5pt;
+                line-height: 1.3;
+                direction: rtl;
             }
-
-            .bgColor {
-                background: {{ $bgColor }} !important;
-            }
-
-            .page-break {
-                page-break-after: always;
-                /* Ensure content starts on a new page */
+            .divider {
+                border-top: 1.5px solid #000;
+                margin-top: 5px;
+                margin-bottom: 12px;
+                width: 100%;
             }
         </style>
     </head>
+
     <main>
-        <div class="content_info">
-            <table border="1" cellspacing="0" cellpadding="5"
-                style="width: 100%;layout:fixed; border-collapse: collapse;font-size:11px;line-height:9px;padding-right:3px;">
-                <tr>
-                    <td style="width: 2cm;">Invoice No. <br>رقم الفاتورة </td>
-                    <td style="width: 1.22cm;">{{ $invoice->invoice_number }}</td>
-                    <td style="width: 2.40cm;">Invoice Date <br>تاريخ الفاتورة </td>
-                    <td style="width: 2cm;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d-m-Y') }}</td>
-                    <td style="width: 2.30cm;">Invoice Month <br>فاتورة الشهر </td>
-                    <td style="width: 3.36cm;">{{ \Carbon\Carbon::parse($invoice->invoice_month)->format('F, Y') }}
-                    </td>
-                    <td style="width: 2.40cm; ">Payment Modes <br>شروط الدفع </td>
-                    <td style="width:2cm;">
-                        <p>
-                            @if ($invoice->paymentModes->count() > 1)
-                                {{-- Display all payment modes in a comma-separated list for multiple items --}}
-                                {{ $invoice->paymentModes->pluck('name')->implode(', ') }}
-                            @elseif ($invoice->paymentModes->count() === 1)
-                                {{-- Display the single payment mode --}}
-                                {{ $invoice->paymentModes->first()->name }}
-                            @else
-                                {{-- Display "N/A" when no payment modes exist --}}
-                                {{ __('messages.common.n/a') }}
-                            @endif
-                        </p>
-
-                    </td>
-                </tr>
-                <tr>
-                    <td style="width: 2cm;">Cust. No. <br>رقم العميل </td>
-                    <td style="width: 1.22cm;">{{ $invoice->customer->code ?? 'N/A' }}</td>
-                    <td style="width: 2cm;">Cust. Name <br>اسم العميل</td>
-                    <!--<td colspan="3">{{ $invoice->customer->company_name ?? 'N/A' }}</td>-->
-                    <td colspan="3">{!! $invoice->customer->company_name ?? 'N/A' !!}</td>
-                    <td style="width: 2.30cm;">Cust. Vat No. <br>رقم الضريبة للعميل</td>
-                    <td
-                        style="width: 2cm; word-wrap: break-word; word-break: break-word; white-space: normal; overflow-wrap: break-word; overflow: hidden; padding: 2px;">
-                        {{ $invoice->customer->vat_number ?? 'N/A' }}
-                    </td>
-
-                </tr>
-                <tr>
-                    <td style="width: 2cm;">Vendor Code <br> رمز المورد</td>
-                    <td style="width: 1cm; word-wrap: break-word; word-break: break-word;">
-                        {{ $invoice->vendor_code ?? '' }}
-                    </td>
-                    <td style="width: 2cm;">Due Date<br>تاريخ الإ‘ستحقاق </td>
-                    <td style="width: 2cm;">{{ \Carbon\Carbon::parse($invoice->due_date)->format('d-m-Y') }}</td>
-                    <td style="width: 2.30cm;">P.O Number <br>رقم امر الشراء </td>
-                    <td style="width: 3.36cm;">{{ $invoice->po_number ?? 'N/A' }}</td>
-                    <td style="width: 2.30cm;">Project Name <br> اسم المشروع</td>
-                    <!--<td style="width:2cm;">{{ $invoice->project_name ?? 'N/A' }}</td>-->
-                     <td style="width: 2cm;">{!! $invoice->project_name ?? 'N/A' !!}</td>
-                </tr>
-                <tr>
-
-                    <td style="width: 2.30cm;">Email<br>بريد إلكتروني</td>
-                    <td colspan="7">{{ $invoice->customer->email ?? 'N/A' }}</td>
-
-                </tr>
-                <tr>
-
-                    <td>Address<br>العنوان</td>
-                    <td colspan="3">
-                        {{-- @if ($invoice->invoiceAddresses && $invoice->invoiceAddresses->isNotEmpty())
-                            @foreach ($invoice->invoiceAddresses as $address)
-                                <div style=" word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
-                                    {{ implode(', ', array_filter([$address->street, $address->city, $address->state, $address->country, $address->zip_code])) }}
-                                </div>
-                            @endforeach
-                        @else --}}
-                        {{-- <div style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
-                            @if (isset($invoice->customer->customerAddress))
-                                {{ $invoice->customer?->customerAddress?->addressCountry?->name ?? ' ' }},
-                                {{ $invoice->customer?->customerAddress?->city ?? ' ' }},
-                                {{ $invoice->customer?->customerAddress?->customerState?->name ?? ' ' }},
-                                {{ $invoice->customer?->customerAddress?->zip ?? ' ' }}
-                                {{ $invoice->customer?->address ?? ' ' }}
-                            @else
-                                N/A
-                            @endif
-                        </div> --}}
-                        {{-- @endif --}}
-                        {{ $invoice->address ?? 'N/A' }}
-                    </td>
-                    <td>Branch<br>فرع</td>
-                    <td colspan="3">{{ $invoice->branch?->name ?? '' }}</td>
-                </tr>
-            </table>
-
-        </div>
-        <div class="content_items">
-            <table class="sales_table_data" style="font-size: 12px;line-height:12px;">
-                <thead>
-                    <tr style="padding: 0px;">
-                        <th style="width: 5%;">S.<br>الرقم</th>
-                        <th style="width: 9%;">Item<br>رقم الصنف</th>
-                        <th class="text-center" style="width: 18%;">Description<br>الوصف</th>
-                        <th style="width: 6%;">Qty<br>الكيمة</th>
-                        <th class="text-center pr-3" style="width: 10%;">Rate<br>السعر</th>
-                        <th style="text-align:center;width: 7%;" class="p-0 pr-1">Disc.<br>خصم</th>
-                        <th style="text-align: center; width: 10%;" class="p-0 pr-1">Taxable<br>للضريبة</th>
-                        <th style="text-align: center;width: 6%;" class="p-0 pr-1">Vat %<br>ضريبة</th>
-                        <th style="text-align: center;width: 6%;" class="pr-1">Vat <br>قيمة </th>
-                        <th class="p-0 text-center pr-2 w-20" style="width: 11%;">Amount<br>الإجمالي </th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    @foreach ($invoice->salesItems as $index => $item)
-                        @php
-                            $befoPrice = $item->quantity * $item->rate - $item->discount; // After discount
-                            $vatAmount = $befoPrice * ($item->tax / 100); // Apply tax on the net price
-                            $netPrice = $befoPrice;
-
-                        @endphp
-                        <tr>
-                            <td style=" text-align:center; ">
-                                {{ $index + 1 }}</td>
-                            <td style=" padding: 2px; text-align:center; padding-left:5px; width:1.10cm;">
-                                {{ $item->item }}</td>
-                            <td
-                                style=" padding: 2px; text-align:left; padding-left:1%; word-wrap: break-word; word-break: break-all;">
-                                {{ html_entity_decode($item->service->title ?? '') }}</td>
-
-                            <td style=" text-align:center;">
-                                {{ $item['quantity'] }}</td>
-                            <td style="text-align:right; width:1.50cm;">
-                                {{ number_format($item['rate'], 2) }}</td>
-                            <td style=" text-align:right;width:1.30cm;">
-                                {{ number_format($item['discount'], 2) }}</td>
-                            <td style=" text-align:right;width:1.30cm;">
-                                {{ number_format($item['quantity'] * $item['rate'] - $item['discount'], 2) }}</td>
-                            <!-- Excluding VAT Amount -->
-                            <td style=" text-align:right; ">
-                                {{ (int)($item->tax) }}%
-                            </td>
-                            <td style=" text-align:right; padding-right:.5%">
-                                {{ number_format($vatAmount, 2) }} <!-- VAT Amount -->
-                            </td>
-                            <td style=" text-align:right; padding-right:1%">
-                                {{ number_format($netPrice, 2) }}
-                                <!-- Including VAT -->
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-
-        <div class="content_calculation" style="margin-top:10px;">
-            <table cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse;font-size:13px;">
-                <tr>
-                    <!-- First Table -->
-                    <td style="width: 50%; vertical-align: top;text-align:left;">
-                        <table cellspacing="0" cellpadding="5" style=" border-collapse: collapse;">
-
-                            <tr>
-                                <td
-                                    style="width: 9.5cm; background: {{ $bgColor }}; border: 1px solid {{ $bColor }};">
-                                    <table style="width: 100%; border-collapse: collapse;">
-                                        <tr>
-                                            <td style="text-align: left; font-size: 10pt;">
-                                                <strong>Amount In Words</strong>
-                                            </td>
-                                            <td style="text-align: right; font-size: 10pt;">
-                                                <strong> مبلغ بالكتابة</strong>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-
-
-                                <td>
-                            </tr>
-                            <tr>
-                                <td style=" border: 1px solid {{ $bColor }};width: 9.5cm;">
-                                    {{ ucfirst($words) }} Only
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid {{ $bColor }};text-align:right;width: 9.5cm;">
-                                    {{ ucfirst($wordsAr) }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td
-                                    style="width: 9.5cm; background: {{ $bgColor }}; border: 1px solid {{ $bColor }};">
-                                    <table style="width: 100%; border: none;">
-                                        <tr>
-                                            <td style="width: 50%; text-align: left; padding: 0px;">
-                                                <strong>Bank Details</strong>
-                                            </td>
-                                            <td style="width: 50%; text-align: right; padding: 0px;">
-                                                <strong> تفاصيل البنك</strong>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-
-                                <td>
-                            </tr>
-                            <tr>
-                                <td
-                                    style="width: 9.5cm;   border: 1px solid {{ $bColor }};height:2cm;padding:0px;">
-
-                                    <table
-                                        style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;font-size:11px;">
-                                        <tr>
-                                            <!-- Left side: 60% width -->
-                                            <td style="width: 70%; border-right: 1px solid {{ $bColor }};">
-                                                <table style="width: 100%; border-collapse: collapse;">
-                                                    <tr>
-                                                        <!-- Row 1 -->
-                                                        <td
-                                                            style="width: 30%; padding: 4px; border-bottom: 1px solid {{ $bColor }};border-right:1px solid {{ $bColor }};">
-                                                            Bank Name</td>
-                                                        <td
-                                                            style="width: 70%; padding: 4px; border-bottom: 1px solid {{ $bColor }};">
-                                                            {{ $invoice->branch?->bank?->name ?? '' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <!-- Row 2 -->
-                                                        <td
-                                                            style="width: 30%; padding: 4px; border-bottom: 1px solid {{ $bColor }};border-right:1px solid {{ $bColor }};">
-                                                            A/C No.</td>
-                                                        <td
-                                                            style="width: 70%; padding: 4px; border-bottom: 1px solid {{ $bColor }};">
-                                                            {{ $invoice->branch?->bank?->account_number ?? '' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <!-- Row 2 -->
-                                                        <td
-                                                            style="width: 30%; padding: 4px; border-bottom: 1px solid {{ $bColor }};border-right:1px solid {{ $bColor }};">
-                                                            IBAN</td>
-                                                        <td
-                                                            style="width: 70%; padding: 4px; border-bottom: 1px solid {{ $bColor }};">
-                                                            {{ $invoice->branch?->bank?->iban_number ?? '' }}
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <!-- Row 2 -->
-                                                        <td
-                                                            style="width: 30%; padding: 4px; border-right:1px solid {{ $bColor }};">
-                                                            Address</td>
-                                                        <td style="width: 70%; padding: 4px;">
-                                                            {{ $invoice->branch?->bank?->address ?? '' }}
-
-                                                        </td>
-                                                    </tr>
-
-                                                </table>
-                                            </td>
-
-                                            <!-- Middle column: 1px wide (no border in the middle here) -->
-                                            <td style="width: 1px;"></td>
-
-                                            <!-- Right side: 40% width -->
-                                            <td style="width: 30%; ">
-                                                @php
-                                                    use Salla\ZATCA\GenerateQrCode;
-                                                    use Salla\ZATCA\Tags\Seller;
-                                                    use Salla\ZATCA\Tags\TaxNumber;
-                                                    use Salla\ZATCA\Tags\InvoiceDate;
-                                                    use Salla\ZATCA\Tags\InvoiceTotalAmount;
-                                                    use Salla\ZATCA\Tags\InvoiceTaxAmount;
-
-                                                    $qr_seller_trn = $trn_number;
-                                                    $qr_tax_amount = $totalVat;
-
-                                                    $qr_invoice_amount = $totalNetAmount ?? 0;
-
-                                                    $qr_code = null;
-                                                    $qr_seller_name = $com_name;
-
-                                                    $qr_invoice_date = !empty($invoice->invoice_date)
-                                                        ? date('Y-m-d', strtotime($invoice->invoice_date))
-                                                        : null;
-
-                                                    if (
-                                                        $qr_seller_name &&
-                                                        $qr_seller_trn &&
-                                                        $qr_invoice_date &&
-                                                        $qr_invoice_amount &&
-                                                        $invoice->payment_status != 0
-                                                    ) {
-                                                        $qr_code = GenerateQrCode::fromArray([
-                                                            new Seller($qr_seller_name),
-                                                            new TaxNumber($qr_seller_trn),
-                                                            new InvoiceDate($qr_invoice_date),
-                                                            new InvoiceTotalAmount(round($qr_invoice_amount)),
-                                                            new InvoiceTaxAmount($qr_tax_amount),
-                                                        ])->render();
-                                                    }
-
-                                                @endphp
-                                                @if ($qr_code)
-                                                    <img style="width: 3cm;height:3cm;" src="{{ $qr_code }}"
-                                                        alt="QR Code" />
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    </table>
-
-
-
-                                    <div style="width: 30%;float:right;">
-
-                                    </div>
-                                </td>
-
-                                <td>
-
-                            </tr>
-
-                        </table>
-
-                    </td>
-
-                    <!-- Second Table -->
-                    <td style="width:50%; vertical-align: top;text-align:right;">
-                        <table style=" border-collapse: collapse; font-size: 13px;">
-                            <tr>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
-                                    <strong>Subtotal</strong>
-                                </td>
-                                <td style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    {{ number_format($totalTaxable, 2) }}
-                                </td>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
-                                    <strong> <span>المجموع الفرعي</span></strong>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <th class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    Total Discount
-                                </th>
-                                <td class="text-right p-1"
-                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    {{ number_format($invoice->discount ?? 0, 2) }}
-                                </td>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
-                                    <strong> <span>المجموع الخضم </span></strong>
-                                </td>
-                            </tr>
-                            {{-- Consolidated Deductions --}}
-                            <tr>
-                                <th class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    Deductions
-                                </th>
-                                <td class="text-right p-1"
-                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    {{ number_format($totalDeductions ?? 0, 2) }}
-                                </td>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
-                                    <strong><span>الخصومات</span></strong>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    <strong>Total Taxable</strong>
-                                </td>
-                                <td style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    {{ number_format($totalTaxable, 2) }}
-                                </td>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 3px; text-align: right;">
-                                    <strong> <span>المجموع الخاضع للضريبة</span></strong>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    <strong>Total Vat</strong>
-                                </td>
-                                <td style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    {{ number_format($totalVat, 2) }}
-                                </td>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
-                                    <strong> <span>المجموع الضريبة</span></strong>
-                                </td>
-                            </tr>
-
-                            @if ($isRound)
-                                <tr>
-                                    <td class="font-weight-bold bgColor"
-                                        style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                        <strong>Round Off</strong>
-                                    </td>
-                                    <td
-                                        style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                        {{ number_format($invoice->adjustment, 2) }}
-                                    </td>
-                                    <td class="font-weight-bold bgColor"
-                                        style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
-                                        <strong> <span>تقريب</span></strong>
-                                    </td>
-                                </tr>
-                            @endif
-
-
-                            <tr>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    <strong>Net Amount</strong>
-                                </td>
-                                <td style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
-                                    {{ number_format((($totalTaxable ?? 0) + ($totalVat ?? 0) + ($invoice->adjustment ?? 0)), 2) }}
-                                </td>
-                                <td class="font-weight-bold bgColor"
-                                    style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
-                                    <strong> <span>المجموع الضافى</span></strong>
-                                </td>
-                            </tr>
-                        </table>
-
-                    </td>
-                </tr>
-            </table>
-
-        </div>
-
-        <div style="font-family: Arial, sans-serif; clear: both;">
-            @if ($invoice->project?->terms && $invoice->project?->terms->isNotEmpty())
-                <div class="mt-3">
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <thead>
-                            <tr>
-                                <th
-                                    style="padding: 6px; background-color: {{ $bgColor }}; font-family: DejaVu Sans, Arial, sans-serif; text-align: center;">
-                                    <table style="width: 100%; border: none; border-collapse: collapse;">
-                                        <tr>
-                                            <td style="text-align: left; width: 50%;"><strong>Terms and
-                                                    Conditions</strong></td>
-                                            <td style="text-align: right; direction: rtl; width: 50%;"><strong> الشروط
-                                                    و الأحكام :</strong></td>
-                                        </tr>
-                                    </table>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Loop through the terms and display them as bullet points -->
-                            @foreach ($invoice->project?->terms as $estimateTerm)
-                                <tr>
-                                    <td>
-                                        <ul style="margin: 0; padding-left: 15px;">
-                                            <li style="font-size: 12px;padding:0px;line-height:10px;">
-                                                {{ $estimateTerm['description'] }}</li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
-
-        <table style="width: 100%; text-align: center;margin-top:30px;">
-            <!--<tr>-->
-            <!--    <td style="width: 33.33%;">Signature __________________</td>-->
-            <!--    <td style="width: 33.33%;">Date __________________</td>-->
-            <!--    <td style="width: 33.33%;">Stamp __________________</td>-->
-            <!--</tr>-->
+        <!-- Dynamic Header -->
+        <table class="header-table">
             <tr>
-                <td colspan="3" style="padding: 10px;"><br>
-                    <strong>THANK YOU FOR YOUR BUSINESS!! شكرا لتعاملكم معنا</strong>
+                <td class="company-info-en">
+                    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 3px;">Dawod Suliman Ebrahim Alhabdan Contracting Company</div>
+                    <div>Kingdom of Saudi Arabia</div>
+                    <div>TEL: {{ $clean_phone }}</div>
+                    <div>Address: {{ $address_en }}</div>
+                    <div>C.R. No: {{ $settings['code'] ?? '1010266184' }}</div>
+                    <div>VAT No: {{ $settings['vat_number'] ?? '311371213800003' }}</div>
+                </td>
+                <td class="company-logo-td">
+                    @if ($logo_base64)
+                        <img class="company-logo" src="{{ $logo_base64 }}" alt="Logo" />
+                    @endif
+                </td>
+                <td class="company-info-ar">
+                    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 3px;">شركة داود سليمان ابراهيم الهبدان للمقاولات</div>
+                    <div>المملكة العربية السعودية</div>
+                    <div>تليفون: {{ $clean_phone }}</div>
+                    <div>العنوان: {{ $address_ar }}</div>
+                    <div>رقم السجل: {{ $settings['code'] ?? '1010266184' }}</div>
+                    <div>رقم ضريبي: {{ $settings['vat_number'] ?? '311371213800003' }}</div>
+                </td>
+            </tr>
+        </table>
+        <div class="divider"></div>
+
+        <!-- Metadata Section with QR code in middle -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+            <tr>
+                <td style="width: 40%; vertical-align: top; text-align: left;">
+                    <div style="color: #d32f2f; font-weight: bold; font-size: 12pt; text-transform: uppercase; margin-bottom: 8px;">TAX INVOICE</div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px;">Invoice Date: <span style="font-weight: bold;">{{ $invoiceDateStrEn }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px;">Invoice No: <span style="font-weight: bold;">{{ $invoice->invoice_number }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px;">Invoice Month: <span style="font-weight: bold;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('F Y') }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px;">P.O. No: <span style="font-weight: bold;">{{ $poNumber }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px;">Vendor Code: <span style="font-weight: bold;">{{ $vendorCode }}</span></div>
+                </td>
+                <td style="width: 20%; vertical-align: middle; text-align: center;">
+                    @php
+                        use Salla\ZATCA\GenerateQrCode;
+                        use Salla\ZATCA\Tags\Seller;
+                        use Salla\ZATCA\Tags\TaxNumber;
+                        use Salla\ZATCA\Tags\InvoiceDate as QrInvoiceDate;
+                        use Salla\ZATCA\Tags\InvoiceTotalAmount;
+                        use Salla\ZATCA\Tags\InvoiceTaxAmount;
+
+                        $qr_seller_trn      = $trn_number;
+                        $qr_tax_amount      = $taxAmount;
+                        $qr_invoice_amount  = $netAmount;
+                        $qr_seller_name     = $com_name;
+
+                        $qr_invoice_date = !empty($invoice->invoice_date)
+                            ? date('Y-m-d', strtotime($invoice->invoice_date))
+                            : null;
+                        if ($qr_invoice_date && $invoice->created_at) {
+                            $qr_invoice_date .= ' ' . date('H:i:s', strtotime($invoice->created_at));
+                        }
+
+                        $qr_code = null;
+                        if ($qr_seller_name && $qr_seller_trn && $qr_invoice_date && $qr_invoice_amount) {
+                            $qr_code = GenerateQrCode::fromArray([
+                                new Seller($qr_seller_name),
+                                new TaxNumber($qr_seller_trn),
+                                new QrInvoiceDate($qr_invoice_date),
+                                new InvoiceTotalAmount(round($qr_invoice_amount)),
+                                new InvoiceTaxAmount($qr_tax_amount),
+                            ])->render();
+                        }
+                    @endphp
+                    @if ($qr_code)
+                        <img style="width: 85px; height: 85px;" src="{{ $qr_code }}" alt="QR Code" />
+                    @endif
+                </td>
+                <td style="width: 40%; vertical-align: top; text-align: right; direction: rtl;">
+                    <div style="color: #d32f2f; font-weight: bold; font-size: 12pt; margin-bottom: 8px;">فاتورة ضريبية</div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px; direction: rtl;">تاريخ الفاتورة: <span style="font-weight: bold;">{{ $invoiceDateStrAr }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px; direction: rtl;">رقم الفاتورة: <span style="font-weight: bold;">{{ $invoice->invoice_number }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px; direction: rtl;">نوع الفاتورة: <span style="font-weight: bold;">-</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px; direction: rtl;">أمر الشراء: <span style="font-weight: bold;">{{ $poNumber }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 3px; direction: rtl;">أمر التوريد: <span style="font-weight: bold;">{{ $vendorCode }}</span></div>
+                </td>
+            </tr>
+        </table>
+        <div style="border-top: 1px solid #ccc; margin-top: 8px; margin-bottom: 10px;"></div>
+
+        <!-- Customer Section -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; text-align: left;">
+                    <div style="font-weight: bold; font-size: 10pt; text-transform: uppercase; margin-bottom: 5px;">CUSTOMER:</div>
+                    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 4px;">{!! $invoice->customer->company_name ?? 'N/A' !!}</div>
+                    <div style="font-size: 8.5pt; margin-bottom: 2px;">VAT No: <span style="font-weight: bold;">{{ $invoice->customer->vat_number ?? 'N/A' }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 2px;">Tel No: <span style="font-weight: bold;">{{ $invoice->customer->phone ?? 'N/A' }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 2px;">Eng. Address: <span style="font-weight: bold;">{{ $engAddress }}</span></div>
+                </td>
+                <td style="width: 50%; vertical-align: top; text-align: right; direction: rtl;">
+                    <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px;">بيانات العميل:</div>
+                    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 4px;">{!! $invoice->customer->customer_arabic_name ?? 'N/A' !!}</div>
+                    <div style="font-size: 8.5pt; margin-bottom: 2px;">رقم ضريبي: <span style="font-weight: bold;">{{ $invoice->customer->vat_number ?? 'N/A' }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 2px;">تليفون: <span style="font-weight: bold;">{{ $invoice->customer->phone ?? 'N/A' }}</span></div>
+                    <div style="font-size: 8.5pt; margin-bottom: 2px;">العنوان عربي: <span style="font-weight: bold;">{{ $arAddress }}</span></div>
                 </td>
             </tr>
         </table>
 
+        <div style="border-top: 1px solid #ccc; margin-top: 8px; margin-bottom: 10px;"></div>
 
+        <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+            <tr>
+                <td style="width: 50%; text-align: left;">
+                    <span>Project Name: </span>
+                    <span style="font-weight: bold;">
+                        {!! $projectName !!}
+                    </span>
+                </td>
+
+                <td style="width: 50%; text-align: right;">
+                    <span>Project Location: </span>
+                    <span style="font-weight: bold;">
+                        {{ $projectLocation }}
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 9pt;">
+            <thead>
+                <tr style="background-color: #fafafa; border-top: 1px solid #000; border-bottom: 1px solid #000;">
+                    <th style="width: 8%; text-align: center; padding: 6px 4px; font-weight: bold;">Ser<br>الرقم</th>
+                    <th style="width: 52%; text-align: left; padding: 6px 4px; font-weight: bold;">Description<br>الشرح</th>
+                    <th style="width: 12%; text-align: right; padding: 6px 4px; font-weight: bold;">QTY<br>كمية</th>
+                    <th style="width: 13%; text-align: right; padding: 6px 4px; font-weight: bold;">PRICE<br>سعر</th>
+                    <th style="width: 15%; text-align: right; padding: 6px 4px; font-weight: bold;">AMOUNT<br>اجمالي</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($invoice->salesItems as $index => $item)
+                    @php
+                        $itemAmount = $item->quantity * $item->rate;
+                    @endphp
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="text-align: center; padding: 6px 4px;">{{ $index + 1 }}</td>
+                        <td style="text-align: left; padding: 6px 4px; word-wrap: break-word;">
+                            {{ html_entity_decode($item->service->title ?? '') }} / <span style="direction: rtl; unicode-bidi: plaintext;">{{ $item->service->title_arabic }}</span>
+                        </td>
+                        <td style="text-align: right; padding: 6px 4px;">{{ number_format($item->quantity, 2) }}</td>
+                        <td style="text-align: right; padding: 6px 4px;">{{ number_format($item->rate, 2) }}</td>
+                        <td style="text-align: right; padding: 6px 4px;">{{ number_format($itemAmount, 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <!-- Calculations & Totals Block -->
+        <div style="width: 100%; margin-top: 10px;">
+            <table style="margin-left: auto; margin-right: 0; border-collapse: collapse; font-size: 9pt;">
+                <tr>
+                    <td style="text-align: right; padding: 5px 10px; font-weight: bold; border-bottom: 1px solid #eee;">Items Amount(السعر):</td>
+                    <td style="text-align: right; padding: 5px 10px; border-bottom: 1px solid #eee; width: 3cm;">{{ number_format($subtotal, 2) }}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right; padding: 5px 10px; font-weight: bold; border-bottom: 1px solid #eee;">Discount(الخصم):</td>
+                    <td style="text-align: right; padding: 5px 10px; border-bottom: 1px solid #eee;">({{ number_format($discount, 2) }})</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right; padding: 5px 10px; font-weight: bold; border-bottom: 1px solid #eee;">Amount due(المستحق) (%100.00):</td>
+                    <td style="text-align: right; padding: 5px 10px; border-bottom: 1px solid #eee;">{{ number_format($amountDue, 2) }}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right; padding: 5px 10px; font-weight: bold; border-bottom: 1px solid #eee;">Tax Amount(الضريبة) (%15.00):</td>
+                    <td style="text-align: right; padding: 5px 10px; border-bottom: 1px solid #eee;">{{ number_format($taxAmount, 2) }}</td>
+                </tr>
+                <tr style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; background-color: #f5f5f5;">
+                    <td style="text-align: right; padding: 7px 10px; font-weight: bold; font-size: 10pt;">Net Amount(الصافي):</td>
+                    <td style="text-align: right; padding: 7px 10px; font-weight: bold; font-size: 10pt; color: #0d47a1;">{{ number_format($netAmount, 2) }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Terms and Conditions if present -->
+        @if ($invoice->project?->terms && $invoice->project?->terms->isNotEmpty())
+            <div style="margin-top: 30px; font-size: 8pt; clear: both; width: 100%;">
+                <div style="font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 5px;">Terms and Conditions / الشروط و الأحكام :</div>
+                <ul style="margin: 0; padding-left: 15px;">
+                    @foreach ($invoice->project?->terms as $estimateTerm)
+                        <li style="margin-bottom: 2px;">{{ $estimateTerm['description'] }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- Thank you centered text -->
+        <div style="text-align: center; font-weight: bold; font-size: 11pt; margin-top: 40px; clear: both; width: 100%;">
+            THANK YOU FOR YOUR BUSINESS!! شكرا لتعاملكم معنا
+        </div>
     </main>
 </body>
