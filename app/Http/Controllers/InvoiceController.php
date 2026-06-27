@@ -443,7 +443,7 @@ class InvoiceController extends AppBaseController
         $retention = $subtotal * 0.10;
         $amountDue = $subtotal - $discount;
         $taxAmount = $subtotal * 0.15;
-        $netAmount = $amountDue - $retention + $taxAmount + ($invoice->adjustment ?? 0);
+        $netAmount = $amountDue + $taxAmount + ($invoice->adjustment ?? 0);
 
         $words = $this->amountToWords($netAmount);
         $wordsAr = $this->amountToWords($netAmount, 'ar');
