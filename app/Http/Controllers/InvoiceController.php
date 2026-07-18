@@ -447,15 +447,14 @@ class InvoiceController extends AppBaseController
 
         $words = $this->amountToWords($netAmount);
         $wordsAr = $this->amountToWords($netAmount, 'ar');
-        $format = $branch ? $branch->print_format : 1;
         $isRound = $settings['is_round'] ?? 0;
 
         $mpdf = new Mpdf([
             'format' => 'A4',
-            'margin_top' => 12,
-            'margin_bottom' => 12,
-            'margin_left' => 12,
-            'margin_right' => 12,
+            'margin_top' => 45,
+            'margin_bottom' => 19,
+            'margin_left' => 0,
+            'margin_right' => 0,
             'margin_header' => 0,
             'margin_footer' => 0,
             'mode' => 'utf-8',
@@ -463,6 +462,13 @@ class InvoiceController extends AppBaseController
             'autoScriptToLang' => true,
             'directionality' => 'rtl',
         ]);
+
+        $format = $branch ? $branch->print_format : 1;
+        $baseImagePath = public_path('print/format_' . $format);
+
+        // Company header image
+        $headerPath = $baseImagePath . '/header.jpg';
+        $headerImage = 'data:image/jpg;base64,' . base64_encode(file_get_contents($headerPath));
 
         $data = [
             'invoice' => $invoice,
@@ -475,11 +481,82 @@ class InvoiceController extends AppBaseController
             'netAmount' => $netAmount,
             'words' => $words,
             'wordsAr' => $wordsAr,
+            'headerImage' => $headerImage,
             'isRound' => $isRound
         ];
 
-        $invoiceText = ($invoice->payment_status === 0) ? 'Draft Invoice' : 'VAT Invoice';
+        $invoiceText = ($invoice->payment_status === 0) ? 'Draft Invoice' : 'Tax Invoice';
         $invoiceTextArabic = ($invoice->payment_status === 0) ? 'فاتورة مسودة' : 'فاتورة ضريبية';
+
+        $mpdf->SetHTMLHeader('
+        <header style="width: 100%; height: 110px;">
+            <!-- Header Image -->
+            <img src="' . $headerImage . '" style="width: 100%; height: 110px;">
+
+            <!-- Additional Content Below the Image -->
+            <div class="content-header" style="width: 100%; height: 1.80cm; margin: 0; position: relative;">
+                <div class="vat" style="display: inline-block; padding: 5px; font-size: 12pt; padding-left: 0.26cm; text-align: left; padding-top: 20px; width: 30%; float: left;">
+                       Vat No. : ' . ($settings['vat_number'] ?? 'N/A') . '
+                </div>
+                <div class="content_header_title" style="vertical-align: middle; margin-top: 10px; float: left; display: inline-block; width: 37%; height: 1.13cm; text-align: center; line-height: 40px; border: 1px solid #bbdefb; background: #e3f2fd;">
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; margin-left: 5px;">
+                        <tr>
+                            <td style="text-align: left; font-size: 17pt;">
+                                ' . $invoiceText . '
+                            </td>
+                            <td style="text-align: right; font-size: 17pt; padding-right: 10px;">
+                                ' . $invoiceTextArabic . '
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </header>
+    ');
+
+        $footerHtml = '
+    <footer style="width: 100%; margin: 0; padding: 0; font-family: DejaVu Sans, Arial, sans-serif; background: white;">
+        <!-- Addresses Section - Adjusted spacing -->
+        <div style="width: 100%; text-align: center; padding-top: 5px;">
+            <!-- Arabic Address (Gold, Centered, Bold) -->
+            <div style="color: #2F8CC4; font-size: 10pt; font-weight: bold; text-align: center; direction: rtl; line-height: 1;">
+                ' . ($branch->address_ar ?? 'العنوان هنا') . '
+            </div>
+
+            <!-- English Address (Black, Centered, Bold) - Close but not overlapping -->
+            <div style="color: #000000; font-size: 10pt; font-weight: bold; text-align: center; line-height: 1; margin-top: -2px;">
+                ' . ($branch->address ?? 'Address here') . '
+            </div>
+        </div>
+
+        <!-- Email & Website (Gold Background, White Text) -->
+        <div style="width: 100%; background-color: #2F8CC4; padding: 6px 0; margin-top: 3px; text-align: center;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+                <tr>
+                    <!-- Email -->
+                    <td style="width: 50%; text-align: left; padding-left: 15px;">
+                        <span style="color: #ffffff; font-weight: bold;">
+                            Email: ' . ($settings['email'] ?? 'email@example.com') . '
+                        </span>
+                    </td>
+
+                    <!-- Website -->
+                    <td style="width: 50%; text-align: right; padding-right: 15px;">
+                        <span style="color: #ffffff; font-weight: bold;">
+                            Website: ' . ($branch->website ?? $settings['website'] ?? 'www.example.com') . '
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Page Numbers -->
+        <div style="text-align: start; font-size: 10px; padding-left: 10px; color: #666;">
+            Page {PAGENO} of {nbpg}
+        </div>
+    </footer>';
+
+        $mpdf->SetHTMLFooter($footerHtml);
 
         // Render the HTML content
         $html = view('invoices.invoice_pdf_arabic', $data)->render();
