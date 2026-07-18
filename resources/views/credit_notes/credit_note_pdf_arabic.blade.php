@@ -20,8 +20,8 @@
     $com_name = $settings['company'];
     $trn_number = $settings['vat_number'];
 
-    $bgColor = '#4fc3f7';  /* Gentle deep blue - soft but still noticeable */
-    $bColor = '#0288d1';   /* Soft deep border */
+    $bgColor = '#e3f2fd';  /* Very light blue background */
+    $bColor = '#90caf9';   /* Soft light blue border */
 
 @endphp
 
@@ -95,7 +95,7 @@
             }
 
             .bgColor {
-                background: #fff7f2 !important;
+                background: {{ $bgColor }} !important;
             }
 
             .page-break {
