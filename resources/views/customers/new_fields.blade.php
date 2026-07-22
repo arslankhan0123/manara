@@ -118,6 +118,10 @@
                 {{ Form::text('address', $customer->address ?? null, ['class' => 'form-control', 'maxLength' => '200', 'autocomplete' => 'off']) }}
             </div>
             <div class="form-group col-md-3 col-sm-12">
+                {{ Form::label('address_ar', 'Address in Arabic') }}
+                {{ Form::text('address_ar', $customer->address_ar ?? null, ['class' => 'form-control', 'maxlength' => '300', 'autocomplete' => 'off', 'dir' => 'rtl']) }}
+            </div>
+            <div class="form-group col-md-3 col-sm-12">
                 {{ Form::label('email', __('messages.customer.email')) }}
                 {{ Form::email('email', $customer->email ?? null, ['class' => 'form-control', 'minLength' => '4', 'maxLength' => '30', 'autocomplete' => 'off']) }}
             </div>

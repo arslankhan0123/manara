@@ -51,6 +51,7 @@ class CustomerRepository extends BaseRepository
         'customer_logo',
         'fax',
         'address',
+        'address_ar',
         'opening_balance'
     ];
 

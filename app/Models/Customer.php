@@ -125,6 +125,7 @@ class Customer extends Model
         'location_url' => "nullable",
         'customer_logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         'address' => "nullable",
+        'address_ar' => 'nullable|string|max:300',
         'short_name' => "nullable",
         'vendor_code' => 'nullable',
         'opening_balance' => 'nullable|numeric|min:0',
@@ -141,6 +142,7 @@ class Customer extends Model
         'zip' => 'nullable|max:6',
         'website' => 'nullable|regex:/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/',
         'vendor_code' => 'nullable',
+        'address_ar' => 'nullable|string|max:300',
     ];
 
     /**
@@ -164,6 +166,7 @@ class Customer extends Model
         'fax',
         'customer_logo',
         'address',
+        'address_ar',
         'location_url',
         'inactive',
         'short_name',
@@ -186,6 +189,7 @@ class Customer extends Model
         'currency' => 'string',
         'country' => 'string',
         'default_language' => 'string',
+        'address_ar' => 'string',
     ];
 
     public static function messages()
