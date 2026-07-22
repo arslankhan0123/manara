@@ -57,6 +57,18 @@
                 /* Background color for odd rows' first cell */
             }
 
+            #creditNoteSummaryTable .credit-note-summary-key {
+                background-color: #d9edf7 !important;
+                color: #000000;
+                font-weight: normal;
+            }
+
+            #creditNoteSummaryTable .credit-note-summary-value {
+                background-color: #ffffff !important;
+                color: #000000;
+                font-weight: normal;
+            }
+
             .content_items {
                 font-size: 8pt;
                 width: 100%;
@@ -106,6 +118,69 @@
     </head>
     <main>
         <div class="content_info">
+            @php
+                $customerAddressEnglish = collect([
+                    $creditNote->customer?->customerAddress?->addressCountry?->name,
+                    $creditNote->customer?->customerAddress?->city,
+                    $creditNote->customer?->customerAddress?->customerState?->name,
+                    $creditNote->customer?->customerAddress?->zip,
+                    $creditNote->customer?->address,
+                ])->filter()->implode(', ');
+                $paymentModes = $creditNote->invoice?->paymentModes ?? collect();
+            @endphp
+            <table id="creditNoteSummaryTable" border="1" cellspacing="0" cellpadding="5"
+                style="width: 100%; border-collapse: collapse; font-size: 10px; padding-right: 3px; line-height: 9px;">
+                <tr>
+                    <td class="credit-note-summary-key" colspan="1">Credit Note No.<br>رقم الإشعار الدائن</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ $creditNote->credit_note_number ?? 'N/A' }}</td>
+                    <td class="credit-note-summary-key" colspan="1">Credit Note Date<br>تاريخ الإشعار الدائن</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ \Carbon\Carbon::parse($creditNote->credit_note_date)->format('d-m-Y') }}</td>
+                    <td class="credit-note-summary-key" colspan="1">Invoice No.<br>رقم الفاتورة</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ $creditNote->invoice?->invoice_number ?? 'N/A' }}</td>
+                    <td class="credit-note-summary-key" colspan="1">Cust. Vat No.<br>رقم الضريبة للعميل</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important; word-wrap: break-word; overflow-wrap: break-word;">
+                        {{ $creditNote->customer->vat_number ?? 'N/A' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="credit-note-summary-key" colspan="2">Customer Name Eng<br>اسم العميل بالإنجليزية</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="4" style="background-color: #ffffff !important;">{!! $creditNote->customer->company_name ?? 'N/A' !!}</td>
+                    <td class="credit-note-summary-key" colspan="2">Customer Name Arb<br>اسم العميل بالعربية</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="4" dir="rtl" style="background-color: #ffffff !important;">{{ $creditNote->customer->customer_arabic_name ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td class="credit-note-summary-key" colspan="2">Customer Address Eng<br>عنوان العميل بالإنجليزية</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="4" style="background-color: #ffffff !important; word-wrap: break-word; overflow-wrap: break-word;">
+                        {{ $customerAddressEnglish ?: 'N/A' }}
+                    </td>
+                    <td class="credit-note-summary-key" colspan="2">Customer Address Arabic<br>عنوان العميل بالعربية</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="4" dir="rtl" style="background-color: #ffffff !important; word-wrap: break-word; overflow-wrap: break-word;">
+                        {{ $creditNote->customer->address_ar ?? 'N/A' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="credit-note-summary-key" colspan="1">Payment Modes<br>شروط الدفع</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">
+                        {{ $paymentModes->isNotEmpty() ? $paymentModes->pluck('name')->implode(', ') : __('messages.common.n/a') }}
+                    </td>
+                    <td class="credit-note-summary-key" colspan="1">Project Code<br>رقم المشروع</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ $creditNote->invoice?->project?->project_code ?? 'N/A' }}</td>
+                    <td class="credit-note-summary-key" colspan="1">Project Name<br>اسم المشروع</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{!! $creditNote->invoice?->project?->project_name ?? 'N/A' !!}</td>
+                    <td class="credit-note-summary-key" colspan="1">Project Location<br>موقع المشروع</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ $creditNote->invoice?->project?->project_location ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td class="credit-note-summary-key" colspan="1">P.O. No<br>أمر الشراء</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="3" style="background-color: #ffffff !important;">{{ $creditNote->invoice?->project?->po_number ?? $creditNote->invoice?->po_number ?? 'N/A' }}</td>
+                    <td class="credit-note-summary-key" colspan="1">Vendor Code<br>رمز المورد</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="3" style="background-color: #ffffff !important;">{{ $creditNote->vendor_code ?? $creditNote->customer?->vendor_code ?? 'N/A' }}</td>
+                    <td class="credit-note-summary-key" colspan="1">Branch<br>فرع</td>
+                    <td class="credit-note-summary-value" bgcolor="#ffffff" colspan="3" style="background-color: #ffffff !important;">{{ $creditNote->branch?->name ?? 'N/A' }}</td>
+                </tr>
+            </table>
+
+            @if (false)
             <table border="1" cellspacing="0" cellpadding="5"
                 style="width: 100%; border-collapse: collapse;font-size:10px;padding-right:3px;line-height:9px;">
                 <tr>
@@ -205,6 +280,7 @@
 
 
             </table>
+            @endif
 
         </div>
 
