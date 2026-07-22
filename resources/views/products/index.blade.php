@@ -45,7 +45,7 @@
 @endsection
 @section('scripts')
     <script src="{{ mix('assets/js/custom/input-price-format.js') }}"></script>
-    <script src="{{ asset('assets/js/products/products.js') }}"></script>
+    <script src="{{ mix('assets/js/products/products.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("#serviceGroup,#editserviceGroup").select2({

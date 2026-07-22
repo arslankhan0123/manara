@@ -350,7 +350,10 @@
                                 {{ $item->category->name ?? '' }}</td> --}}
                                 <td
                                     style="border: 1px solid #848484; padding: 2px; text-align:left; padding-left:1%;width: 340px; word-wrap: break-word; word-break: break-all;">
-                                    {{ html_entity_decode($item->service->title ?? '') }}</td>
+                                    <span dir="ltr">
+                                        {{ html_entity_decode($item->service->title ?? '') }}@if (!empty($item->service?->title_arabic)) / <span dir="rtl">{{ html_entity_decode($item->service->title_arabic) }}</span>@endif
+                                    </span>
+                                </td>
 
                                 <td style="border: 1px solid #848484; text-align:center;width:40px;">
                                     {{ $item['quantity'] }}</td>

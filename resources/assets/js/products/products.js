@@ -195,6 +195,7 @@ window.renderData = function (id) {
                 let element = document.createElement('textarea');
                 element.innerHTML = result.data.title;
                 $('#editTitle').val(element.value);
+                $('#editTitleArabic').val(result.data.title_arabic || '');
                 $('#editProductDescription').
                     summernote('code', result.data.description);
                 $('#editRate').val(result.data.rate);

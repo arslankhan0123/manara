@@ -71,7 +71,8 @@ class Product extends Model
         'tax_1_id' => 'nullable',
         'tax_2_id' => 'nullable',
         'item_group_id' => 'required',
-        'item_number'=>'nullable'
+        'item_number'=>'nullable',
+        'title_arabic' => 'nullable|string|max:300',
     ];
 
     /**
@@ -82,6 +83,7 @@ class Product extends Model
     protected $casts = [
         'id' => 'integer',
         'title' => 'string',
+        'title_arabic' => 'string',
         'description' => 'string',
         'rate' => 'double',
         'tax_1_id' => 'integer',

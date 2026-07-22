@@ -207,7 +207,10 @@
                                 {{ $item->item }}</td>
                             <td
                                 style=" padding: 2px; text-align:left; padding-left:1%;width:6.49cm; word-wrap: break-word; word-break: break-all;">
-                                {{ html_entity_decode($item->service->title ?? '') }}</td>
+                                <span dir="ltr">
+                                    {{ html_entity_decode($item->service->title ?? '') }}@if (!empty($item->service?->title_arabic)) / <span dir="rtl">{{ html_entity_decode($item->service->title_arabic) }}</span>@endif
+                                </span>
+                            </td>
 
                             <td style=" text-align:center;width:.96cm;">
                                 {{ $item['quantity'] }}</td>

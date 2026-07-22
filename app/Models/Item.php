@@ -52,6 +52,7 @@ class Item extends Model
      */
     protected $fillable = [
         'title',
+        'title_arabic',
         'description',
         'rate',
         'tax_1_id',
@@ -67,6 +68,7 @@ class Item extends Model
     protected $casts = [
         'id' => 'integer',
         'title' => 'string',
+        'title_arabic' => 'string',
         'description' => 'string',
         'rate' => 'double',
         'tax_1_id' => 'integer',
