@@ -394,6 +394,9 @@ class CreditNoteController extends AppBaseController
                         </tr>
                     </table>
                 </div>
+                <div style="display: inline-block; font-size: 12pt; text-align: left; padding-top: 8px; width: 29%; float: right; font-weight: normal; direction: ltr;">
+                    CR No. : ' . ($settings['code'] ?? 'N/A') . '
+                </div>
             </div>
         </header>
     ');
