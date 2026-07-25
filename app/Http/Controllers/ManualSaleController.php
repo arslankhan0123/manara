@@ -518,7 +518,7 @@ class ManualSaleController extends AppBaseController
 
         $mpdf = new Mpdf([
             'format'           => 'A4',
-            'margin_top'       => 45,
+            'margin_top'       => 49,
             'margin_bottom'    => 19,
             'margin_left'      => 0,
             'margin_right'     => 0,
@@ -533,9 +533,11 @@ class ManualSaleController extends AppBaseController
         $format = $branch ? $branch->print_format : 1;
         $baseImagePath = public_path('print/format_' . $format);
 
-        // Company header image
-        $headerPath = $baseImagePath . '/header.jpg';
-        $headerImage = 'data:image/jpg;base64,' . base64_encode(file_get_contents($headerPath));
+        // Standalone logo used by the bilingual PDF header.
+        $headerPath = public_path('print/manara_header_logo.png');
+        $headerImage = 'data:image/png;base64,' . base64_encode(file_get_contents($headerPath));
+        $topDesignPath = public_path('print/manara_top_design.png');
+        $topDesignImage = 'data:image/png;base64,' . base64_encode(file_get_contents($topDesignPath));
 
         $data = [
             'invoice'    => $invoice,
@@ -556,30 +558,44 @@ class ManualSaleController extends AppBaseController
         $invoiceTextArabic = ($invoice->payment_status === 0) ? 'فاتورة مسودة' : 'فاتورة ضريبية';
 
         $mpdf->SetHTMLHeader('
-        <header style="width: 100%; height: 110px;">
-            <!-- Header Image -->
-            <img src="' . $headerImage . '" style="width: 100%; height: 110px;">
-
-            <!-- Additional Content Below the Image -->
-            <div class="content-header" style="width: 100%; height: 1.80cm; margin: 0; position: relative;">
-                <div class="vat" style="display: inline-block; padding: 5px; font-size: 12pt; padding-left: 0.26cm; text-align: left; padding-top: 20px; width: 30%; float: left;">
-                       Vat No. : ' . ($settings['vat_number'] ?? 'N/A') . '
-                </div>
-                <div class="content_header_title" style="vertical-align: middle; margin-top: 10px; float: left; display: inline-block; width: 37%; height: 1.13cm; text-align: center; line-height: 40px; border: 1px solid #bbdefb; background: #e3f2fd;">
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; margin-left: 5px;">
-                        <tr>
-                            <td style="text-align: left; font-size: 17pt;">
-                                ' . $invoiceText . '
-                            </td>
-                            <td style="text-align: right; font-size: 17pt; padding-right: 10px;">
-                                ' . $invoiceTextArabic . '
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div style="display: inline-block; font-size: 12pt; text-align: left; padding-top: 8px; width: 29%; float: right; font-weight: normal; direction: ltr;">
-                    CR No. : ' . ($settings['code'] ?? 'N/A') . '
-                </div>
+        <header style="width: 100%; height: 165px; padding: 0; font-family: DejaVu Sans, Arial, sans-serif;">
+            <img src="' . $topDesignImage . '" style="position: absolute; top: -39px; left: 0; width: 100%; height: 34px;">
+            <div style="padding: 0 14px;">
+            <table style="width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #681018;">
+                <tr>
+                    <td style="width: 43%; vertical-align: top; text-align: left; direction: ltr; font-size: 10pt; line-height: 1.25; padding-bottom: 4px;">
+                        <div style="font-size: 13pt; font-weight: bold;">Manara for General Contracting Est.</div>
+                        <div style="font-weight: bold;">Kingdom of Saudi Arabia</div>
+                        <div style="font-weight: bold;">Address -Makkah -New shubaniya, P.O 24353</div>
+                        <div style="font-weight: bold;">C.R. No. 4031251746</div>
+                        <div style="font-weight: bold;">VAT No. 310973271700003</div>
+                    </td>
+                    <td style="width: 14%; vertical-align: middle; text-align: center;">
+                        <img src="' . $headerImage . '" style="height: 82px; width: 59px;">
+                    </td>
+                    <td style="width: 43%; vertical-align: top; text-align: right; direction: rtl; font-size: 10pt; line-height: 1.25; padding-bottom: 4px;">
+                        <div style="font-size: 13pt; font-weight: bold;">مؤسسة المنارة للمقاولات العامة</div>
+                        <div style="font-weight: bold;">المملكة العربية السعودية</div>
+                        <div style="font-weight: bold;">العنوان: مكة المكرمة - الشبيكية الجديدة، ص.ب ٢٤٣٥٣</div>
+                        <div style="font-weight: bold;">رقم السجل التجاري : ٤٠٣١٢٥١٧٤٦</div>
+                        <div style="font-weight: bold;">الرقم الضريبي : ٣١٠٩٧٣٢٧١٧٠٠٠٠٣</div>
+                    </td>
+                </tr>
+            </table>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 4px;">
+                <tr>
+                    <td style="width: 31%;"></td>
+                    <td style="width: 38%; border: 1px solid #bbdefb; background: #e3f2fd; padding: 5px 8px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="text-align: left; font-size: 15pt;">' . $invoiceText . '</td>
+                                <td style="text-align: right; font-size: 15pt;">' . $invoiceTextArabic . '</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 31%;"></td>
+                </tr>
+            </table>
             </div>
         </header>
     ');
