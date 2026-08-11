@@ -254,7 +254,7 @@
 
                         <!-- Excluding VAT -->
                         <td class="excluding-vat pr-1 text-right">
-                            {{ number_format($item->quantity * $item->rate, 2) }}
+                            {{ number_format(($item->quantity * $item->rate) - $item->discount, 2) }}
                         </td>
 
                         <!-- VAT % -->

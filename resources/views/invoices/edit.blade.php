@@ -642,7 +642,9 @@
                     let rowDeduction = (deductionPercentage * rate / 100 * quantity);
 
                     let vatAmount = ((quantity * rate) - rowDisk - rowDeduction) * 0.15;
-                    let taxableAmount = (quantity * rate) - rowDisk - rowDeduction;
+                    // Row taxable is shown after discount only. Invoice deductions
+                    // are applied to the summary taxable/VAT totals below.
+                    let taxableAmount = (quantity * rate) - rowDisk;
                     let totalAmount = taxableAmount;
 
                     row.find('.discount').val(rowDisk.toFixed(2));
@@ -1145,7 +1147,9 @@
                     let rowDeduction = (deductionPercentage * rate / 100 * quantity);
 
                     let vatAmount = ((quantity * rate) - rowDisk - rowDeduction) * 0.15;
-                    let taxableAmount = (quantity * rate) - rowDisk - rowDeduction;
+                    // Row taxable is shown after discount only. Invoice deductions
+                    // are applied to the summary taxable/VAT totals below.
+                    let taxableAmount = (quantity * rate) - rowDisk;
                     let totalAmount = taxableAmount;
 
                     row.find('.discount').val(rowDisk.toFixed(2));

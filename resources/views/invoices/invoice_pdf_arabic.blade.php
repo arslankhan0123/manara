@@ -301,8 +301,8 @@
                             <td style=" text-align:right;width:1.30cm;">
                                 {{ number_format($item['discount'], 2) }}</td>
                             <td style=" text-align:right; padding-right:1%">
-                                {{ number_format($netPrice, 2) }}
-                                <!-- Including VAT -->
+                                {{ number_format($befoPrice, 2) }}
+                                <!-- Quantity * Rate - Discount -->
                             </td>
                         </tr>
                     @endforeach
