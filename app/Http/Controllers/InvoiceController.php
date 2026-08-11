@@ -444,9 +444,10 @@ class InvoiceController extends AppBaseController
             + max(0, $invoice->allowance_deduction ?? 0)
             + max(0, $invoice->damage_deduction ?? 0);
         $retention = $subtotal * 0.10;
-        $amountDue = $subtotal - $discount - $totalDeductions;
-        $taxAmount = $amountDue * 0.15;
-        $netAmount = $amountDue + $taxAmount + ($invoice->adjustment ?? 0);
+        // PDF summary: deductions and discount reduce the taxable base first.
+        $amountDue = max(0, round($subtotal - $discount - $totalDeductions, 2));
+        $taxAmount = round($amountDue * 0.15, 2);
+        $netAmount = round($amountDue + $taxAmount + ($invoice->adjustment ?? 0), 2);
 
         $words = $this->amountToWords($netAmount);
         $wordsAr = $this->amountToWords($netAmount, 'ar');
