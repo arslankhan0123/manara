@@ -88,28 +88,6 @@
                 /* Add padding to table data cells */
             }
 
-            /* Hide item-level tax details; totals remain in the invoice summary. */
-            .sales_table_data th:nth-child(7),
-            .sales_table_data td:nth-child(7),
-            .sales_table_data th:nth-child(8),
-            .sales_table_data td:nth-child(8),
-            .sales_table_data th:nth-child(9),
-            .sales_table_data td:nth-child(9) {
-                display: none;
-            }
-
-            .sales_table_data th:nth-child(2),
-            .sales_table_data td:nth-child(2) { width: 14%; }
-            .sales_table_data th:nth-child(3),
-            .sales_table_data td:nth-child(3) { width: 35%; }
-            .sales_table_data th:nth-child(4),
-            .sales_table_data td:nth-child(4) { width: 8%; }
-            .sales_table_data th:nth-child(5),
-            .sales_table_data td:nth-child(5) { width: 13%; }
-            .sales_table_data th:nth-child(6),
-            .sales_table_data td:nth-child(6) { width: 10%; }
-            .sales_table_data th:nth-child(10),
-            .sales_table_data td:nth-child(10) { width: 15%; }
 
             .bColor {
                 border: .05cm solid #e2e2e2 !important;
@@ -322,15 +300,6 @@
                                 {{ number_format($item['rate'], 2) }}</td>
                             <td style=" text-align:right;width:1.30cm;">
                                 {{ number_format($item['discount'], 2) }}</td>
-                            <td style=" text-align:right;width:1.30cm;">
-                                {{ number_format($item['quantity'] * $item['rate'] - $item['discount'], 2) }}</td>
-                            <!-- Excluding VAT Amount -->
-                            <td style=" text-align:right; width:1.50cm;">
-                                {{ (int)($item->tax) }}%
-                            </td>
-                            <td style=" text-align:right; padding-right:1%">
-                                {{ number_format($vatAmount, 2) }} <!-- VAT Amount -->
-                            </td>
                             <td style=" text-align:right; padding-right:1%">
                                 {{ number_format($netPrice, 2) }}
                                 <!-- Including VAT -->

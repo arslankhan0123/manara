@@ -583,6 +583,15 @@ class InvoiceController extends AppBaseController
 
         // Render the HTML content
         $html = view('invoices.invoice_pdf_arabic', $data)->render();
+        $html = preg_replace(
+            [
+                '~<th\b[^>]*>\s*Taxable<br>.*?</th>~si',
+                '~<th\b[^>]*>\s*Vat %<br>.*?</th>~si',
+                '~<th\b[^>]*>\s*Vat\s*<br>.*?</th>~si',
+            ],
+            '',
+            $html
+        );
         $mpdf->WriteHTML($html);
 
         // Output the PDF
