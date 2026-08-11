@@ -88,6 +88,29 @@
                 /* Add padding to table data cells */
             }
 
+            /* Hide item-level tax details; totals remain in the invoice summary. */
+            .sales_table_data th:nth-child(7),
+            .sales_table_data td:nth-child(7),
+            .sales_table_data th:nth-child(8),
+            .sales_table_data td:nth-child(8),
+            .sales_table_data th:nth-child(9),
+            .sales_table_data td:nth-child(9) {
+                display: none;
+            }
+
+            .sales_table_data th:nth-child(2),
+            .sales_table_data td:nth-child(2) { width: 14%; }
+            .sales_table_data th:nth-child(3),
+            .sales_table_data td:nth-child(3) { width: 35%; }
+            .sales_table_data th:nth-child(4),
+            .sales_table_data td:nth-child(4) { width: 8%; }
+            .sales_table_data th:nth-child(5),
+            .sales_table_data td:nth-child(5) { width: 13%; }
+            .sales_table_data th:nth-child(6),
+            .sales_table_data td:nth-child(6) { width: 10%; }
+            .sales_table_data th:nth-child(10),
+            .sales_table_data td:nth-child(10) { width: 15%; }
+
             .bColor {
                 border: .05cm solid #e2e2e2 !important;
             }
@@ -511,6 +534,21 @@
                                 <td class="font-weight-bold bgColor"
                                     style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
                                     <strong> <span>المجموع الخضم </span></strong>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th class="font-weight-bold bgColor"
+                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
+                                    Deduction
+                                </th>
+                                <td class="text-right p-1"
+                                    style="border: 1px solid {{ $bColor }}; padding: 7px; text-align: right;">
+                                    {{ number_format($totalDeductions ?? 0, 2) }}
+                                </td>
+                                <td class="font-weight-bold bgColor"
+                                    style="border: 1px solid {{ $bColor }}; padding: 6px; text-align: right;">
+                                    <strong><span>خصم الغياب</span></strong>
                                 </td>
                             </tr>
 

@@ -8,7 +8,7 @@ var __webpack_exports__ = {};
 
 $(document).ready(function () {
   var submit;
-  alert("works fine");
+  // alert("works fine");
   $('#invoiceCurrencyId').select2({
     width: '100%',
     placeholder: Lang.get('messages.placeholder.select_currency')
