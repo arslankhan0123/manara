@@ -269,7 +269,7 @@
                     <td style="width: 2.30cm;">Invoice Date</td>
                     <td style="width: 2cm;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d-m-Y') }}</td>
                     <td style="width: 2.48cm;">Invoice Month</td>
-                    <td style="width: 3.36cm;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M, y') }}</td>
+                    <td style="width: 3.36cm;">{{ \Carbon\Carbon::parse($invoice->invoice_month)->format('M, y') }}</td>
                     <td style="width: 2.40cm;">Payment Terms</td>
                     <td style="width:2cm;">Credit</td>
                 </tr>

@@ -249,7 +249,7 @@
                     <tr>
                         <td>{{ $invoice->invoice_number }}</td>
                         <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d-m-Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($invoice->invoice_month)->format('M y') }}</td>
                         <td>{{ $invoice->customer->vat_number ?? 'N/A' }}</td>
                     </tr>
                     <tr><br></tr>

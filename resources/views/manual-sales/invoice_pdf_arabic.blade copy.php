@@ -220,7 +220,7 @@
                     <td style="width: 2.40cm;">Invoice Date <br>تاريخ الفاتورة </td>
                     <td style="width: 2cm;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d-m-Y') }}</td>
                     <td style="width: 2.30cm;">Invoice Month <br>فاتورة الشهر </td>
-                    <td style="width: 3.36cm;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M, y') }}</td>
+                    <td style="width: 3.36cm;">{{ \Carbon\Carbon::parse($invoice->invoice_month)->format('M, y') }}</td>
                     <td style="width: 2.40cm;">Payment Terms<br>شروط الدفع </td>
                     <td style="width:2cm;">Credit</td>
                 </tr>

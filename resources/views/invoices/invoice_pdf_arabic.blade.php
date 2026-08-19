@@ -122,7 +122,7 @@
                     <td class="invoice-summary-key" colspan="1">Invoice Date<br>تاريخ الفاتورة</td>
                     <td class="invoice-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d-m-Y') }}</td>
                     <td class="invoice-summary-key" colspan="1">Invoice Month<br>فاتورة الشهر</td>
-                    <td class="invoice-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M, y') }}</td>
+                    <td class="invoice-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important;">{{ \Carbon\Carbon::parse($invoice->invoice_month)->format('M, y') }}</td>
                     <td class="invoice-summary-key" colspan="1">Cust. Vat No.<br>رقم الضريبة للعميل</td>
                     <td class="invoice-summary-value" bgcolor="#ffffff" colspan="2" style="background-color: #ffffff !important; word-wrap: break-word; overflow-wrap: break-word;">
                         {{ $invoice->customer->vat_number ?? 'N/A' }}
@@ -184,7 +184,7 @@
                     </td>
                     <td style="width: 2.48cm;">Invoice Month <br>فاتورة الشهر</td>
                     <td style="width: 1.5cm;">
-                        {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M, y') }}</td>
+                        {{ \Carbon\Carbon::parse($invoice->invoice_month)->format('M, y') }}</td>
                     <td style="width: 2.40cm;">Cust. Vat No. <br>رقم الضريبة للعميل</td>
                     <td
                         style="width: 2cm; word-wrap: break-word; word-break: break-word; white-space: normal; overflow-wrap: break-word; overflow: hidden; padding: 2px;">
